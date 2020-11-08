@@ -40,6 +40,7 @@ TASK              OUTPUT   IMAGE       EXIT CODE
 
 # USAGE
 
+```python
 import logging
 from containerpy.runner import DockerRunner
 
@@ -50,7 +51,7 @@ runner = DockerRunner()
 
 task = {"image": "ubuntu:latest", "script": ["echo HELLO CONTAINERPY"]}
 runner.run_task(task)
-
+```
 
 # TESTING
 
