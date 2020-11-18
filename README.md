@@ -27,10 +27,10 @@ To manage process tasks (script) using containers
 ```
 TASK              OUTPUT   IMAGE       EXIT CODE
 - hello world       stdout   ubuntu      0              DONE
-- println           stdout   python:3.8  0
-- wget + wc         stdout   ubuntu      0
+- print             stdout   python:3.8  0              DONE
+- wget + wc         stdout   ubuntu      0              DONE
 - env               stdout   ubuntu      0
-- env + input       stdout   ubuntu      0
+- env + input       stdout   ubuntu      0              DONE
 - input + output    stdout   ubuntu      0
 - exit 1            stderr   ubuntu      1
 - python something  stdout   local image 0
@@ -45,11 +45,13 @@ import logging
 from containerpy.runner import DockerRunner
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 runner = DockerRunner()
 
 task = {"image": "ubuntu:latest", "script": ["echo HELLO CONTAINERPY"]}
+# OR
+task = {"image": "ubuntu:latest", "script": ["sh", "-c", "echo ${ABC}"], "inputs": [{"ABC": "100"}] }
 runner.run_task(task)
 ```
 

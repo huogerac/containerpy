@@ -1,0 +1,4 @@
+
+# DEV
+pytest==6.1.2
+bpython==0.20.1

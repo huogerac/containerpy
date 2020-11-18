@@ -5,7 +5,6 @@ logger = logging.getLogger(__name__)
 
 
 class DockerRunner:
-
     def __init__(self):
         self.client = docker.from_env()
         self.client_api = docker.APIClient(base_url="unix://var/run/docker.sock")
@@ -14,33 +13,30 @@ class DockerRunner:
         self.container = None
 
     def _initialize_image(self):
-        for line in self.client_api.pull(repository=self.task['image'], stream=True, decode=True):
+        for line in self.client_api.pull(repository=self.task["image"], stream=True, decode=True):
             logger.info(line.get("status"))
 
     def _initialize_env(self):
-        for task_input in self.task.get('inputs', []):
-            env_attr = '{task_input.upper()}'
-            self.environment[env_attr] = self.task['inputs'].get(task_input)
+        self.environment.update(self.task.get("inputs", {}))
 
     def _create_container(self):
-        self.container = self.client.containers.run(
-            image=self.task['image'],
-            command=self.task.get('entrypoint', 'sleep infinity'),
-            detach=True,
+        self.container = self.client.containers.create(
+            image=self.task["image"],
+            entrypoint=self.task.get("entrypoint", "tail -f /dev/null"),
             environment=self.environment,
-            working_dir=self.task.get('working_dir', '/app'),
         )
 
     def _execute_script(self):
         self.exit_code = 0
-        for cmd in self.task['script']:
-            execution = self.container.exec_run(cmd, stream=True, demux=True)
-            for stdout, stderr in execution.output:
-                if stdout:
-                    logger.info(stdout)
+        self.container.start()
 
-                elif stderr:
-                    logger.error(stderr)
+        self.execution = self.container.exec_run(self.task["script"], stream=True, demux=True)
+        for stdout, stderr in self.execution.output:
+            if stdout:
+                logger.info(stdout)
+
+            elif stderr:
+                logger.error(stderr)
 
     def run_task(self, task):
 
@@ -53,9 +49,9 @@ class DockerRunner:
         self._execute_script()
 
         self.container.stop()
-        logger.info('container stopped')
+        logger.info("container stopped")
 
         self.client.close()
-        logger.info('connection stopped')
+        logger.info("connection stopped")
 
-        logger.info('done')
+        logger.info("done")
