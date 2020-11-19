@@ -17,7 +17,9 @@ class DockerRunner:
             logger.info(line.get("status"))
 
     def _initialize_env(self):
+        self.environment.update(self.task.get("environment", {}))
         self.environment.update(self.task.get("inputs", {}))
+        self.environment.update(self.task.get("outputs", {}))
 
     def _create_container(self):
         self.container = self.client.containers.create(

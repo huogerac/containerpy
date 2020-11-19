@@ -29,9 +29,9 @@ TASK              OUTPUT   IMAGE       EXIT CODE
 - hello world       stdout   ubuntu      0              DONE
 - print             stdout   python:3.8  0              DONE
 - wget + wc         stdout   ubuntu      0              DONE
-- env               stdout   ubuntu      0
+- env               stdout   ubuntu      0              DONE
 - env + input       stdout   ubuntu      0              DONE
-- input + output    stdout   ubuntu      0
+- input + output    stdout   ubuntu      0              DONE
 - exit 1            stderr   ubuntu      1
 - python something  stdout   local image 0
 ```
