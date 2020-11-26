@@ -1,2 +1,5 @@
 __pycache__
 .vscode/
+build/
+containerpy.egg-info/
+dist/

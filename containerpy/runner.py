@@ -12,8 +12,20 @@ class DockerRunner:
         self.environment = {}
         self.container = None
 
+    def _get_local_image(self, image_name):
+        """Returns the image when it exists locally"""
+        try:
+            return self.client.images.get(image_name)
+        except docker.errors.ImageNotFound:
+            return None
+
     def _initialize_image(self):
-        for line in self.client_api.pull(repository=self.task["image"], stream=True, decode=True):
+        image_name = self.task["image"]
+        if self._get_local_image(image_name):
+            logger.info(f"Image {image_name} already exists locally")
+            return
+
+        for line in self.client_api.pull(repository=image_name, stream=True, decode=True):
             logger.info(line.get("status"))
 
     def _initialize_env(self):
@@ -33,12 +45,17 @@ class DockerRunner:
         self.container.start()
 
         self.execution = self.container.exec_run(self.task["script"], stream=True, demux=True)
-        for stdout, stderr in self.execution.output:
-            if stdout:
-                logger.info(stdout)
+        try:
+            for stdout, stderr in self.execution.output:
+                if stdout:
+                    logger.info(stdout)
 
-            elif stderr:
-                logger.error(stderr)
+                elif stderr:
+                    logger.error(stderr)
+            print("fim")
+
+        except Exception as error:
+            print("Error:---> {}".format(str(error)))
 
     def run_task(self, task):
 

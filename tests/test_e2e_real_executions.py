@@ -96,8 +96,6 @@ def test_should_get_save_output(caplog):
         ]
     )
 
-    task = {"image": "ubuntu:latest", "script": ["sh", "-c", download_cmd]}
-
     task = {
         "image": "ubuntu:latest",
         "inputs": {
@@ -111,3 +109,29 @@ def test_should_get_save_output(caplog):
     runner.run_task(task)
 
     assert "output.txt" in caplog.text
+
+
+def test_should_stop_after_exit_code_gt_zero(caplog):
+
+    caplog.set_level(logging.INFO)
+
+    download_cmd = ";".join(
+        [
+            "echo ABC",
+            "echo DEF",
+            "exit 1",
+            # "echo NO_EXECUTED",
+        ]
+    )
+
+    task = {
+        "image": "ubuntu:latest",
+        "script": ["sh", "-c", download_cmd],
+    }
+
+    runner = DockerRunner()
+    runner.run_task(task)
+
+    assert "ABC" in caplog.text
+    assert "DEF" in caplog.text
+    assert "NO_EXECUTED" not in caplog.text

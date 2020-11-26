@@ -36,6 +36,12 @@ TASK              OUTPUT   IMAGE       EXIT CODE
 - python something  stdout   local image 0
 ```
 
+containerpy
+===========
+
+.. image:: https://img.shields.io/pypi/v/containerpy.svg
+    :target: https://pypi.python.org/pypi/containerpy
+    :alt: Latest PyPI version
 
 
 # USAGE
@@ -58,3 +64,14 @@ runner.run_task(task)
 # TESTING
 
 pytest
+
+
+# Requirements
+
+- Docker
+
+
+
+# Authors
+
+`containerpy` was written by `Roger Camargo <huogerac@gmail.com>`_.
