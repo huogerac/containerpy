@@ -75,3 +75,8 @@ pytest
 # Authors
 
 `containerpy` was written by `Roger Camargo <huogerac@gmail.com>`_.
+
+
+# DEV
+
+python setup.py develop --user

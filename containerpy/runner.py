@@ -40,7 +40,7 @@ class DockerRunner:
             environment=self.environment,
         )
 
-    def _execute_script(self):
+    def _execute_script(self, stdout_to=logger.info, stderr_to=logger.error):
         self.exit_code = 0
         self.container.start()
 
@@ -48,16 +48,18 @@ class DockerRunner:
         try:
             for stdout, stderr in self.execution.output:
                 if stdout:
-                    logger.info(stdout)
+                    stdout_to(stdout)
 
                 elif stderr:
-                    logger.error(stderr)
+                    stderr_to(stderr)
             print("fim")
 
         except Exception as error:
-            print("Error:---> {}".format(str(error)))
+            error_msg = "CONTAINER EXEC ERROR: {}".format(str(error))
+            logger.error(error_msg, exc_info=error)
+            raise RuntimeError(error_msg)
 
-    def run_task(self, task):
+    def run_task(self, task, stdout_to=None, stderr_to=None):
 
         logger.info("Starting container")
         self.task = task
@@ -65,7 +67,7 @@ class DockerRunner:
         self._initialize_image()
         self._initialize_env()
         self._create_container()
-        self._execute_script()
+        self._execute_script(stdout_to, stderr_to)
 
         self.container.stop()
         logger.info("container stopped")
