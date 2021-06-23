@@ -82,15 +82,26 @@ class DockerRunner:
             network_mode="host",
         )
 
-    def _execute_script(self, stdout_to=logger.info, stderr_to=logger.error):
+    def _execute_script(self, stdout_to, stderr_to):
         self.exit_code = 0
         self.container.start()
 
-        self.execution = self.container.exec_run(
-            self.task["script"], stream=True, demux=True
-        )
+        cmds = self.task["script"]
+        print("Output to: -->{}<--".format(stdout_to))
+        print("Running: -->{}<--".format(cmds))
+
+        # self.client_api.exec_create(
+        #     self.container,
+        #     cmds
+        # )
+        self.execution = self.container.exec_run(cmds, stream=True, demux=True)
         try:
             for stdout, stderr in self.execution.output:
+                print(
+                    "-----------> stdout:{} stderr:{}".format(
+                        type(stdout), type(stderr)
+                    )
+                )
                 if stdout:
                     stdout_to(stdout)
 
@@ -98,12 +109,57 @@ class DockerRunner:
                     stderr_to(stderr)
             print("fim execution")
 
-        except Exception as error:
+        except docker.errors.APIError as error:
             error_msg = "CONTAINER EXEC ERROR: {}".format(str(error))
             logger.error(error_msg, exc_info=error)
             raise RuntimeError(error_msg)
 
-    def run_task(self, task, stdout_to=None, stderr_to=None):
+    def _execute_script_api(self, stdout_to, stderr_to):
+
+        self.pid = 0
+        self.exit_code = 0
+        self.container.start()
+
+        cmds = self.task["script"]
+        print("Output to: -->{}<--".format(stdout_to))
+        print("Running: -->{}<--".format(cmds))
+
+        self.exec1 = self.client_api.exec_create(
+            self.container.id,
+            cmds,
+            environment=self.environment,
+        )
+        print("Output exec1: -->{}<--".format(self.exec1))
+
+        self.execution = self.client_api.exec_start(
+            self.exec1["Id"], stream=True, demux=True
+        )
+        print("Output execution: -->{}<--".format(self.execution))
+
+        try:
+            for stdout, stderr in self.execution:
+                if stdout:
+                    print("--------> stdout:{}".format(stdout))
+                    stdout_to(stdout)
+
+                elif stderr:
+                    print("--------> stderr:{}".format(stderr))
+                    stderr_to(stderr)
+            print("fim execution")
+
+            self.inspect = self.client_api.exec_inspect(self.exec1["Id"])
+            print("fim inspect")
+            self.exit_code = self.inspect["ExitCode"]
+            self.pid = self.inspect["Pid"]
+
+            print("exit code: {} - pid: {}".format(self.exit_code, self.pid))
+
+        except docker.errors.APIError as error:
+            error_msg = "CONTAINER EXEC ERROR: {}".format(str(error))
+            logger.error(error_msg, exc_info=error)
+            raise RuntimeError(error_msg)
+
+    def run_task(self, task, stdout_to=logger.info, stderr_to=logger.error):
 
         logger.info("Starting container")
         self.task = task
@@ -111,7 +167,7 @@ class DockerRunner:
         self._initialize_image()
         self._initialize_env()
         self._create_container()
-        self._execute_script(stdout_to, stderr_to)
+        self._execute_script_api(stdout_to, stderr_to)
 
         self.container.stop()
         logger.info("container stopped")
